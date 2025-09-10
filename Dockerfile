@@ -20,7 +20,7 @@ RUN python -m pip install --upgrade pip setuptools wheel
 
 # --- ROCm + PyTorch (TheRock) ---
 ARG ROCM_INDEX=https://rocm.nightlies.amd.com/v2/gfx1151
-RUN python -m pip install --index-url ${ROCM_INDEX} 'rocm[libraries,devel]' && \
+RUN python -m pip install --index-url ${ROCM_INDEX} --pre 'rocm[libraries,devel]' && \
     python -m pip install --index-url ${ROCM_INDEX} --pre torch pytorch-triton-rocm numpy
 
 # --- Python libs needed by the repro (CPU wheels are fine) ---
