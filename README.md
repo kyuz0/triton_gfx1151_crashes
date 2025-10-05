@@ -2,13 +2,20 @@
 
 ## ✅ Update: FIXED in Linux mainline
 
-The **HIP illegal memory access crash** on RDNA (gfx1151, e.g. Strix Halo) when using **Triton FlashAttention** is now **fixed upstream**.
+The issue reproduced here — a **HIP illegal memory access** crash on RDNA (gfx1151, e.g. Strix Halo) — was **not a Triton FlashAttention bug**, but rather a **kernel-side issue in the AMD GPU driver (amdgpu/MES)**.  
+FlashAttention was simply a reliable way to **trigger** the problem because of its compute kernels.
 
-**Fix commit:**  
-https://github.com/torvalds/linux/commit/1fb710793ce2619223adffaf981b1ff13cd48f17  
+**Root cause:**  
+The kernel bug was in how the **MES (Micro Engine Scheduler)** handled long compute workloads.  
+The following patch fixes it by enabling a safety bit (`lr_compute_wa`) to prevent MES hangs on long-running jobs:
 
-This patch has been merged into **Linus’ tree** and will be part of **Linux 6.18-rc1** when released.  
-After applying or running a kernel with this fix, the crash **no longer reproduces** — verified on my setup.
+> **Commit:** [drm/amdgpu: Enable MES lr_compute_wa by default](https://github.com/torvalds/linux/commit/1fb710793ce2619223adffaf981b1ff13cd48f17)  
+> *"The MES set resources packet has an optional bit 'lr_compute_wa'  
+> which can be used for preventing MES hangs on long compute jobs.  
+> Set this bit by default."*
+
+This change is merged in **Linus’ tree** and will be included in **Linux 6.18-rc1**.  
+With this fix applied, the crash **no longer reproduces** — verified on my gfx1151 system using the same Triton FlashAttention workload.
 
 ### 🔧 How to get the fix on Fedora
 
@@ -17,12 +24,12 @@ You can easily install mainline kernels built directly from Linus’ tree:
 ```bash
 sudo dnf -y copr enable @kernel-vanilla/stable
 sudo dnf upgrade 'kernel*'
-```
+````
 
 Then reboot into the updated kernel.
 If you’re using Secure Boot, remember to **disable it** before booting unsigned kernels.
 
-Alternatively, advanced users can **cherry-pick the individual commit** into their own kernel tree — that’s how I tested the fix initially.
+Alternatively, experienced users can **cherry-pick the individual commit** into their kernel tree — that’s how this fix was originally verified.
 
 ---
 
