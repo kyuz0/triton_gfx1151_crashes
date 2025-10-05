@@ -1,5 +1,33 @@
 # Triton FlashAttention crash repro (gfx1151 / ROCm)
 
+## ✅ Update: FIXED in Linux mainline
+
+The **HIP illegal memory access crash** on RDNA (gfx1151, e.g. Strix Halo) when using **Triton FlashAttention** is now **fixed upstream**.
+
+**Fix commit:**  
+https://github.com/torvalds/linux/commit/1fb710793ce2619223adffaf981b1ff13cd48f17  
+
+This patch has been merged into **Linus’ tree** and will be part of **Linux 6.18-rc1** when released.  
+After applying or running a kernel with this fix, the crash **no longer reproduces** — verified on my setup.
+
+### 🔧 How to get the fix on Fedora
+
+You can easily install mainline kernels built directly from Linus’ tree:
+
+```bash
+sudo dnf -y copr enable @kernel-vanilla/stable
+sudo dnf upgrade 'kernel*'
+```
+
+Then reboot into the updated kernel.
+If you’re using Secure Boot, remember to **disable it** before booting unsigned kernels.
+
+Alternatively, advanced users can **cherry-pick the individual commit** into their own kernel tree — that’s how I tested the fix initially.
+
+---
+
+## Original description
+
 This repo reproduces a **HIP illegal memory access** when using **Triton FlashAttention** on RDNA (gfx1151, e.g. Strix Halo) in the `Qwen/Qwen-Image` diffusers pipeline.  
 The **same workload** using **PyTorch SDPA** (i.e., FlashAttention disabled) **does not crash**.
 
